@@ -16,13 +16,15 @@ Lucide icons and the DM Sans, Manrope and Dancing Script fonts load from CDNs. T
 
 | Page | What it does |
 |---|---|
-| Dashboard | Greeting, now and next activity with countdown, task counts, today's progress, sleep, balances, money today, recent transactions |
+| Dashboard | Greeting, Bangladesh date/time, now and next activity with countdown, task counts, today's progress, sleep, and expandable transaction history |
 | Schedule | Day, week and month views, recurring activities, overlap warning, in-app reminders while the app is open |
 | Tasks | Priority, category, deadline, status, search and filters, overdue detection, progress |
 | Sleep | Start and wake-up in one tap, several sessions per day, sessions that cross midnight, manual entries, overlap checks, daily, 7-day and 30-day summaries |
 | Personal finance | Income, expense, internal transfer, lend, borrow, repayment, daily money timeline |
 | Wallets | Cash, bKash, Nagad, Bank Account by default; add, edit, archive, delete; balance breakdown |
 | Transactions | Full history with filters, edit and delete, CSV export |
+| Debt records | Track money owed to you or by you, repayments and outstanding balances separately from wallet transactions |
+| University fees | Set your university name and track monthly, semester and custom fees with payment history separately from wallet transactions |
 | Notes | Pin, tags, search, created and updated times |
 | Goals and habits | Daily habits with streaks and history, weekly and monthly goals |
 | Reports | Income vs expense, category spending, balance history, sleep and productivity, with date ranges |
@@ -55,9 +57,10 @@ Protection rules built into the code (same spirit as MY DTI):
 
 The brief planned Supabase, sign-in and Row Level Security. This version has **no accounts and no cloud**, per the decision to build it like MY DTI, so there is no cross-device sync and no multi-user security model. The data layer is isolated in `js/storage.js` and `commit()` in `js/core.js`, so a cloud backend can be added later. Other honest limits:
 
-- All dates and times use the device's timezone (shown in Settings; not separately configurable).
+- All dates and times use Bangladesh Standard Time (Asia/Dhaka, UTC+6), with 12-hour clock formatting.
 - Reminders appear inside the app while it is open. There are no push notifications.
 - The currency setting changes the symbol only; amounts are not converted.
+- Dashboard uses a clean URL without a hash; other pages keep their page hash for direct links.
 
 ## Files
 

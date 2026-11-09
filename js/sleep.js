@@ -108,10 +108,10 @@ function sleepForm(existing) {
       { name: "end", label: "Woke up", type: "datetime-local", required: !existing || !!existing.end },
       { name: "note", label: "Notes (optional)", wide: true, max: 200 }
     ],
-    values: existing ? { start: toLocalInput(existing.start), end: existing.end ? toLocalInput(existing.end) : "", note: existing.note || "" } : {},
-    validate: (v) => validateSleepRange(v.start ? fromLocalInput(v.start) : "", v.end ? fromLocalInput(v.end) : null, existing && existing.id),
+    values: existing ? { start: toDhakaInput(existing.start), end: existing.end ? toDhakaInput(existing.end) : "", note: existing.note || "" } : {},
+    validate: (v) => validateSleepRange(v.start ? fromDhakaInput(v.start) : "", v.end ? fromDhakaInput(v.end) : null, existing && existing.id),
     onSubmit(v) {
-      const next = Object.assign({}, existing || { id: uid(), createdAt: new Date().toISOString() }, { start: fromLocalInput(v.start), end: v.end ? fromLocalInput(v.end) : null, note: v.note });
+      const next = Object.assign({}, existing || { id: uid(), createdAt: new Date().toISOString() }, { start: fromDhakaInput(v.start), end: v.end ? fromDhakaInput(v.end) : null, note: v.note });
       if (!commit(["sleep"], () => { if (existing) db.sleep[db.sleep.findIndex((s) => s.id === existing.id)] = next; else db.sleep.push(next); })) return false;
       ui.sleep.date = isoDay(next.start);
       showToast(existing ? "Session updated." : "Session added.");

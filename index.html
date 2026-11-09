@@ -28,6 +28,7 @@
   <script src="js/sleep.js" defer></script>
   <script src="js/finance.js" defer></script>
   <script src="js/workspace.js" defer></script>
+  <script src="js/records.js" defer></script>
   <script src="js/reports.js" defer></script>
   <script src="js/settings.js" defer></script>
   <script src="js/script.js" defer></script>
@@ -35,7 +36,7 @@
 <body>
   <div id="appView" class="app-view">
     <aside class="sidebar">
-      <a class="brand sidebar-brand" href="#/dashboard" aria-label="LifeKS dashboard"><img class="brand-logo" src="img/logo.svg" alt=""><span>LifeKS</span><span class="sidebar-version" id="sidebarVersion"></span></a>
+      <a class="brand sidebar-brand" href="index.html" aria-label="LifeKS dashboard"><img class="brand-logo" src="img/logo.svg" alt=""><span>LifeKS</span><span class="sidebar-version" id="sidebarVersion"></span></a>
       <div class="sidebar-label">YOUR DAY</div>
       <nav class="side-nav" aria-label="Main navigation">
         <button class="nav-item" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
@@ -48,6 +49,8 @@
         <button class="nav-item" data-page="finance"><i data-lucide="wallet"></i><span>Personal finance</span></button>
         <button class="nav-item" data-page="wallets"><i data-lucide="wallet-cards"></i><span>Wallets</span></button>
         <button class="nav-item" data-page="transactions"><i data-lucide="receipt-text"></i><span>Transactions</span></button>
+        <button class="nav-item" data-page="debts"><i data-lucide="hand-coins"></i><span>Debt records</span></button>
+        <button class="nav-item" data-page="fees"><i data-lucide="graduation-cap"></i><span>University fees</span></button>
       </nav>
       <div class="sidebar-label">YOUR MIND</div>
       <nav class="side-nav" aria-label="Workspace navigation">
@@ -78,6 +81,8 @@
         <section class="app-page is-hidden" id="page-finance"></section>
         <section class="app-page is-hidden" id="page-wallets"></section>
         <section class="app-page is-hidden" id="page-transactions"></section>
+        <section class="app-page is-hidden" id="page-debts"></section>
+        <section class="app-page is-hidden" id="page-fees"></section>
         <section class="app-page is-hidden" id="page-notes"></section>
         <section class="app-page is-hidden" id="page-goals"></section>
         <section class="app-page is-hidden" id="page-reports"></section>
@@ -102,6 +107,8 @@
       <button class="button button-outline" data-page="tasks"><i data-lucide="list-checks"></i> Tasks</button>
       <button class="button button-outline" data-page="wallets"><i data-lucide="wallet-cards"></i> Wallets</button>
       <button class="button button-outline" data-page="transactions"><i data-lucide="receipt-text"></i> Transactions</button>
+      <button class="button button-outline" data-page="debts"><i data-lucide="hand-coins"></i> Debt records</button>
+      <button class="button button-outline" data-page="fees"><i data-lucide="graduation-cap"></i> University fees</button>
       <button class="button button-outline" data-page="notes"><i data-lucide="notebook-pen"></i> Notes</button>
       <button class="button button-outline" data-page="goals"><i data-lucide="target"></i> Goals &amp; habits</button>
       <button class="button button-outline" data-page="reports"><i data-lucide="chart-column"></i> Reports</button>

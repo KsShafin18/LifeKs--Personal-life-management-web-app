@@ -73,7 +73,7 @@ function habitStreak(h) {
 }
 const currentPeriodKey = (period) => (period === "week" ? weekStart(todayKey()) : todayKey().slice(0, 7));
 const goalIsCurrent = (g) => g.periodKey === currentPeriodKey(g.period);
-const goalPeriodText = (g) => (g.period === "week" ? `Week of ${fmtDateShort(g.periodKey)}` : dateFromKey(g.periodKey + "-01").toLocaleDateString([], { month: "long", year: "numeric" }));
+const goalPeriodText = (g) => (g.period === "week" ? `Week of ${fmtDateShort(g.periodKey)}` : fmtMonthYear(g.periodKey + "-01"));
 
 function habitRow(h) {
   const today = todayKey();

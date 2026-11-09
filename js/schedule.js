@@ -100,7 +100,7 @@ function renderMonthView() {
   const offset = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const total = Math.ceil((offset + daysInMonth) / 7) * 7;
-  const gridStart = addDays(dateKey(first), -offset);
+  const gridStart = addDays(dateKeyFromLocalDate(first), -offset);
   const today = todayKey();
   const cells = Array.from({ length: total }, (_, i) => {
     const key = addDays(gridStart, i);
@@ -116,7 +116,7 @@ function scheduleTitle() {
   const { view, date } = ui.schedule;
   if (view === "day") return fmtDateShort(date);
   if (view === "week") { const s = weekStart(date); return `${fmtDateShort(s)} – ${fmtDateShort(addDays(s, 6))}`; }
-  return dateFromKey(date).toLocaleDateString([], { month: "long", year: "numeric" });
+  return fmtMonthYear(date);
 }
 
 PAGES.schedule = {
@@ -196,7 +196,7 @@ ACTIONS["sched-nav"] = (el) => {
   if (dir === 0) s.date = todayKey();
   else if (s.view === "day") s.date = addDays(s.date, dir);
   else if (s.view === "week") s.date = addDays(s.date, 7 * dir);
-  else { const d = dateFromKey(s.date.slice(0, 8) + "01"); d.setMonth(d.getMonth() + dir); s.date = dateKey(d); }
+  else { const d = dateFromKey(s.date.slice(0, 8) + "01"); d.setMonth(d.getMonth() + dir); s.date = dateKeyFromLocalDate(d); }
   renderPage();
 };
 ACTIONS["sched-toggle"] = (el) => {

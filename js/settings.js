@@ -1,7 +1,7 @@
 "use strict";
 
 /* ===== Settings, backup and data safety ===== */
-const BACKUP_FORMAT = { app: "LifeKS", schemaVersion: 1 };
+const BACKUP_FORMAT = { app: "LifeKS", schemaVersion: 2 };
 const CATEGORY_KINDS = [["income", "Income sources"], ["expense", "Expense categories"], ["schedule", "Schedule categories"], ["task", "Task categories"]];
 let storageInfo = null;
 
@@ -27,16 +27,26 @@ function downloadFile(filename, text, mime) {
 
 function validateBackup(obj) {
   if (!obj || typeof obj !== "object" || obj.app !== "LifeKS" || !obj.data || typeof obj.data !== "object") return "This file is not a LifeKS backup.";
-  if (obj.schemaVersion !== 1) return "This backup was made by a newer version of LifeKS and can’t be restored here.";
+  if (![1, 2].includes(obj.schemaVersion)) return "This backup was made by a newer version of LifeKS and can’t be restored here.";
   const d = obj.data;
   for (const name of CONFIG.collections) {
-    if (!Array.isArray(d[name])) return `The backup is missing “${name}”.`;
+    if (!Array.isArray(d[name])) {
+      if (obj.schemaVersion === 1 && ["debts", "educationFees"].includes(name)) { d[name] = []; continue; }
+      return `The backup is missing “${name}”.`;
+    }
     if (!d[name].every((r) => r && typeof r === "object" && typeof r.id === "string")) return `Some ${name} in the backup are damaged.`;
     if (new Set(d[name].map((r) => r.id)).size !== d[name].length) return `Some ${name} in the backup have duplicate IDs.`;
   }
   if (!d.transactions.every((t) => Number.isSafeInteger(t.amount) && t.amount > 0 && TX_TYPES.some((x) => x[0] === t.type) && !Number.isNaN(new Date(t.at).getTime()))) return "Some transactions in the backup are damaged.";
   if (!d.wallets.every((w) => typeof w.name === "string" && Number.isSafeInteger(w.opening || 0))) return "Some wallets in the backup are damaged.";
   if (!d.loans.every((l) => Number.isSafeInteger(l.principal))) return "Some loans in the backup are damaged.";
+  const validPayments = (payments, total) => Array.isArray(payments) &&
+    payments.every((payment) => payment && typeof payment.id === "string" && Number.isSafeInteger(payment.amount) && payment.amount > 0 && !Number.isNaN(new Date(payment.at).getTime())) &&
+    new Set(payments.map((payment) => payment.id)).size === payments.length && payments.reduce((sum, payment) => sum + payment.amount, 0) <= total;
+  if (!d.debts.every((debt) => ["i_owe", "owed_to_me"].includes(debt.direction) && typeof debt.person === "string" && Number.isSafeInteger(debt.principal) && debt.principal > 0 &&
+    validPayments(debt.payments, debt.principal))) return "Some debt records in the backup are damaged.";
+  if (!d.educationFees.every((fee) => ["monthly", "semester", "custom"].includes(fee.type) && typeof fee.name === "string" && typeof fee.period === "string" && Number.isSafeInteger(fee.amount) && fee.amount > 0 &&
+    validPayments(fee.payments, fee.amount))) return "Some university fee records in the backup are damaged.";
   if (!d.sleep.every((s) => !Number.isNaN(new Date(s.start).getTime()))) return "Some sleep sessions in the backup are damaged.";
   if (!d.settings || typeof d.settings !== "object") return "The backup is missing settings.";
   if (!d.categories || !["income", "expense", "schedule", "task"].every((k) => Array.isArray(d.categories[k]) && d.categories[k].every((c) => typeof c === "string"))) return "The backup is missing categories.";
@@ -53,7 +63,8 @@ function exportCsv() {
   const header = ["Date", "Time", "Type", "Amount", "Wallet", "To wallet", "Person", "Category", "Note"];
   const rows = db.transactions.slice().sort(byTimeDesc).map((t) => {
     const d = new Date(t.at);
-    return [dateKey(d), `${pad(d.getHours())}:${pad(d.getMinutes())}`, label(TX_TYPES, t.type), minorToInput(t.amount), walletName(t.walletId), t.toWalletId ? walletName(t.toWalletId) : "", t.person, t.category, t.note].map(csvCell).join(",");
+    const parts = dhakaDateTimeParts(d);
+    return [dateKey(d), `${pad(parts.hour)}:${pad(parts.minute)}`, label(TX_TYPES, t.type), minorToInput(t.amount), walletName(t.walletId), t.toWalletId ? walletName(t.toWalletId) : "", t.person, t.category, t.note].map(csvCell).join(",");
   });
   downloadFile(`lifeks-transactions-${todayKey()}.csv`, "\ufeff" + [header.join(","), ...rows].join("\r\n"), "text/csv;charset=utf-8");
   showToast(db.transactions.length ? "Transactions exported." : "Exported an empty file: there are no transactions yet.");
@@ -96,7 +107,7 @@ function readBackup(mode) {
             const saved = commit(names, () => {
               CONFIG.collections.forEach((name) => {
                 const ids = new Set(db[name].map((record) => record.id));
-                const fresh = d[name].filter((record) => !ids.has(record.id));
+                const fresh = (d[name] || []).filter((record) => !ids.has(record.id));
                 added += fresh.length;
                 db[name] = db[name].concat(fresh);
               });
@@ -141,7 +152,7 @@ function addPreviousData() { readBackup("merge"); }
 function clearAllData() {
   askConfirm({
     title: "Clear all LifeKS data?",
-    message: "This permanently deletes every schedule, task, sleep session, wallet, transaction, loan, note, goal and habit stored on this device. It can’t be undone. Export a backup first if you might want anything back.",
+    message: "This permanently deletes every schedule, task, sleep session, wallet, transaction, loan, debt, university fee record, note, goal and habit stored on this device. It can’t be undone. Export a backup first if you might want anything back.",
     typeWord: "DELETE", confirmLabel: "Delete everything",
     onConfirm() {
       Store.dataKeys().forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });
@@ -177,7 +188,7 @@ PAGES.settings = {
       <div class="card"><div class="card-head"><h2>Profile and region</h2></div><div class="list">
         <div class="row"><div class="row-main"><strong>Your name</strong><small>${esc(db.settings.name || "Not set")}. Shown in the dashboard greeting.</small></div><button class="button button-outline button-sm" data-action="set-name">Change</button></div>
         <div class="row"><div class="row-main"><strong>Currency</strong><small>${esc(db.settings.currency)} (${esc(currencySymbol())}). Changes the symbol only; amounts are not converted.</small></div><button class="button button-outline button-sm" data-action="set-currency">Change</button></div>
-        <div class="row"><div class="row-main"><strong>Timezone</strong><small>${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}. LifeKS follows this device’s timezone for every date and time.</small></div></div></div></div>
+        <div class="row"><div class="row-main"><strong>Timezone</strong><small>Asia/Dhaka (Bangladesh Standard Time, UTC+6). LifeKS uses this timezone for dates, times and date/time entries.</small></div></div></div></div>
       <div class="card"><div class="card-head"><h2>Categories</h2></div>${cats}<p class="muted" style="margin:0;font-size:12px">Removing a category doesn’t change records that already use it. Wallets are managed on the <button class="text-button" data-page="wallets">Wallets page</button>.</p></div>
       <div class="card"><div class="card-head"><h2>Your data and backups</h2></div>
         <div class="notice is-info">${icon("hard-drive")}<p><strong>Your data lives only in this browser on this device.</strong> It does not sync, and clearing browser data, switching browser or losing the device removes it. Download a backup regularly and keep the file somewhere else.</p></div>

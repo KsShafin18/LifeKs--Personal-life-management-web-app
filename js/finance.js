@@ -109,7 +109,9 @@ PAGES.finance = {
       <button class="button button-primary" data-action="tx-add" data-type="expense">${icon("arrow-up-right")} Expense</button>
       <button class="button button-outline" data-action="tx-add" data-type="transfer">${icon("arrow-left-right")} Transfer</button>
       <button class="button button-outline" data-action="loan-add" data-dir="lent">Lend</button>
-      <button class="button button-outline" data-action="loan-add" data-dir="borrowed">Borrow</button>`;
+      <button class="button button-outline" data-action="loan-add" data-dir="borrowed">Borrow</button>
+      <button class="button button-outline" data-page="fees">${icon("graduation-cap")} Pay university fees</button>
+      <button class="button button-outline" data-page="debts">${icon("hand-coins")} Pay debt</button>`;
     return storageBanner() + pageHeader("YOUR MONEY", "Personal finance", "Income, expenses, transfers and loans. Amounts are in " + db.settings.currency + ".", actions) +
       `<div class="stat-row"><div class="stat"><small>Total available</small><strong class="${totalBalance() < 0 ? "neg" : ""}">${fmtMoney(totalBalance())}</strong></div>${wallets}</div>
       <div class="grid grid-2">
@@ -204,8 +206,8 @@ function txFormConfig(type, existing) {
 function openTxForm(type, existing) {
   if (!activeWallets().length) { showToast("Add a wallet first.", true); return; }
   if (type === "transfer" && activeWallets().length < 2) { showToast("A transfer needs at least two active wallets.", true); return; }
-  const defaults = { at: toLocalInput(new Date()), walletId: activeWallets()[0].id, toWalletId: (activeWallets()[1] || activeWallets()[0]).id, category: db.categories[type] ? db.categories[type][0] : "" };
-  const values = existing ? Object.assign({}, existing, { amount: minorToInput(existing.amount), at: toLocalInput(existing.at) }) : defaults;
+  const defaults = { at: toDhakaInput(new Date()), walletId: activeWallets()[0].id, toWalletId: (activeWallets()[1] || activeWallets()[0]).id, category: db.categories[type] ? db.categories[type][0] : "" };
+  const values = existing ? Object.assign({}, existing, { amount: minorToInput(existing.amount), at: toDhakaInput(existing.at) }) : defaults;
   const names = { income: "income", expense: "expense", transfer: "transfer" };
   openForm({
     title: `${existing ? "Edit" : "Add"} ${names[type]}`,
@@ -220,7 +222,7 @@ function openTxForm(type, existing) {
     onSubmit(v) {
       const next = Object.assign({}, existing || { id: uid(), createdAt: new Date().toISOString() }, {
         type, amount: validAmount(v.amount), walletId: v.walletId, toWalletId: type === "transfer" ? v.toWalletId : undefined,
-        person: type === "transfer" ? "" : v.person, category: type === "transfer" ? "" : v.category, note: v.note, at: fromLocalInput(v.at)
+        person: type === "transfer" ? "" : v.person, category: type === "transfer" ? "" : v.category, note: v.note, at: fromDhakaInput(v.at)
       });
       if (!commit(["transactions"], () => { if (existing) db.transactions[db.transactions.findIndex((t) => t.id === existing.id)] = next; else db.transactions.push(next); })) return false;
       ui.finance.date = isoDay(next.at);
@@ -246,7 +248,7 @@ function openLoanForm(direction, existing) {
   openForm({
     title: existing ? "Edit loan" : lent ? "Lend money" : "Borrow money",
     intro: existing ? "To change the amount, delete this loan and record it again." : lent ? "This reduces the wallet now. It is tracked as owed to you, not as an expense." : "This increases the wallet now. It is tracked as a debt, not as income.",
-    fields, values: existing || { at: toLocalInput(new Date()), walletId: activeWallets()[0].id },
+    fields, values: existing || { at: toDhakaInput(new Date()), walletId: activeWallets()[0].id },
     validate(v) {
       if (!existing && !validAmount(v.amount)) return "Enter an amount greater than zero.";
       if (v.due && !validDateKey(v.due)) return "Enter a valid repayment date.";
@@ -261,7 +263,7 @@ function openLoanForm(direction, existing) {
         })) return false;
         showToast("Loan updated.");
       } else {
-        const loan = { id: uid(), direction, person: v.person, principal: validAmount(v.amount), walletId: v.walletId, date: fromLocalInput(v.at), reason: v.reason, due: v.due };
+        const loan = { id: uid(), direction, person: v.person, principal: validAmount(v.amount), walletId: v.walletId, date: fromDhakaInput(v.at), reason: v.reason, due: v.due };
         const tx = { id: uid(), type: lent ? "loan_lent" : "loan_borrowed", amount: loan.principal, walletId: v.walletId, person: v.person, category: "", note: v.reason, at: loan.date, loanId: loan.id, createdAt: new Date().toISOString() };
         if (!commit(["loans", "transactions"], () => { db.loans.push(loan); db.transactions.push(tx); })) return false;
         showToast(lent ? "Loan recorded." : "Borrowing recorded.");
@@ -285,7 +287,7 @@ function openRepayForm(loan) {
       { name: "at", label: "Date and time", type: "datetime-local", required: true },
       { name: "note", label: "Notes (optional)", wide: true, max: 200 }
     ],
-    values: { amount: minorToInput(outstanding), walletId: loan.walletId && activeWallets().some((w) => w.id === loan.walletId) ? loan.walletId : activeWallets()[0].id, at: toLocalInput(new Date()) },
+    values: { amount: minorToInput(outstanding), walletId: loan.walletId && activeWallets().some((w) => w.id === loan.walletId) ? loan.walletId : activeWallets()[0].id, at: toDhakaInput(new Date()) },
     validate(v) {
       const amount = validAmount(v.amount);
       if (!amount) return "Enter an amount greater than zero.";
@@ -293,7 +295,7 @@ function openRepayForm(loan) {
       return "";
     },
     onSubmit(v) {
-      const tx = { id: uid(), type: lent ? "repay_received" : "repay_paid", amount: validAmount(v.amount), walletId: v.walletId, person: loan.person, category: "", note: v.note, at: fromLocalInput(v.at), loanId: loan.id, createdAt: new Date().toISOString() };
+      const tx = { id: uid(), type: lent ? "repay_received" : "repay_paid", amount: validAmount(v.amount), walletId: v.walletId, person: loan.person, category: "", note: v.note, at: fromDhakaInput(v.at), loanId: loan.id, createdAt: new Date().toISOString() };
       if (!commit(["transactions"], () => db.transactions.push(tx))) return false;
       showToast(loanOutstanding(loan) === 0 ? "Loan fully settled." : "Repayment recorded.");
       if (!lent) warnIfNegative([v.walletId]);

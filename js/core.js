@@ -3,7 +3,7 @@
 /* ===== Config (edit here) ===== */
 const CONFIG = {
   app: { name: "LifeKS", version: "v0.1.0", lastUpdated: "09/11/2026", footerLine: "Made for your life, one day at a time" },
-  collections: ["schedules", "tasks", "sleep", "wallets", "transactions", "loans", "notes", "goals", "habits"],
+  collections: ["schedules", "tasks", "sleep", "wallets", "transactions", "loans", "debts", "educationFees", "notes", "goals", "habits"],
   currencies: { BDT: "৳", USD: "$", INR: "₹", EUR: "€" },
   defaultWallets: [
     { name: "Cash", type: "cash" }, { name: "bKash", type: "mobile" },
@@ -46,7 +46,7 @@ function loadAll() {
   const settings = Store.read("settings", {});
   db.settings = settings.status === "ok" && settings.value && typeof settings.value === "object" && !Array.isArray(settings.value) ? settings.value : {};
   if (settings.status === "unreadable") problems.push("Saved settings could not be read.");
-  db.settings = Object.assign({ name: "", currency: "BDT", lastBackupAt: null }, db.settings);
+  db.settings = Object.assign({ name: "", currency: "BDT", lastBackupAt: null, universityName: "" }, db.settings);
 
   const cats = Store.read("categories", null);
   const valid = cats.status === "ok" && cats.value && ["income", "expense", "schedule", "task"].every((k) => Array.isArray(cats.value[k]));
@@ -108,29 +108,62 @@ function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 const pad = (n) => String(n).padStart(2, "0");
-const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const APP_TIME_ZONE = "Asia/Dhaka";
+const dhakaDateTimeParts = (date) => Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+  timeZone: APP_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+}).formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, Number(part.value)]));
+const dateKeyFromParts = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
+const dateKeyFromLocalDate = (date) => dateKeyFromParts(date.getFullYear(), date.getMonth() + 1, date.getDate());
+const dateKey = (d) => {
+  const parts = dhakaDateTimeParts(d);
+  return dateKeyFromParts(parts.year, parts.month, parts.day);
+};
 const dateFromKey = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
 const todayKey = () => dateKey(new Date());
-const addDays = (k, n) => { const d = dateFromKey(k); d.setDate(d.getDate() + n); return dateKey(d); };
-const validDateKey = (k) => typeof k === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k) && dateKey(dateFromKey(k)) === k;
+const addDays = (k, n) => {
+  const [y, m, d] = k.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + n, 12));
+  return dateKeyFromParts(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+};
+const validDateKey = (k) => {
+  if (typeof k !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(k)) return false;
+  const [y, m, d] = k.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+};
 const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
-const nowMin = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
+const nowMin = () => { const n = dhakaDateTimeParts(new Date()); return n.hour * 60 + n.minute; };
 function fmtTime(t) { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`; }
-const fmtDateLong = (k) => dateFromKey(k).toLocaleDateString([], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-const fmtDateShort = (k) => dateFromKey(k).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
-const fmtDateTime = (iso) => new Date(iso).toLocaleString([], { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-const fmtClock = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const dateForKey = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d, 12)); };
+const fmtDateLong = (k) => dateForKey(k).toLocaleDateString("en-BD", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const fmtDateShort = (k) => dateForKey(k).toLocaleDateString("en-BD", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+const fmtMonthYear = (k) => dateForKey(k).toLocaleDateString("en-BD", { timeZone: "UTC", month: "long", year: "numeric" });
+const fmtDateTime = (iso) => new Date(iso).toLocaleString("en-BD", { timeZone: APP_TIME_ZONE, day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
+const fmtClock = (iso) => new Date(iso).toLocaleTimeString("en-BD", { timeZone: APP_TIME_ZONE, hour: "numeric", minute: "2-digit", hour12: true });
 function fmtDur(ms) {
   const total = Math.max(0, Math.floor(ms / 60000));
   const h = Math.floor(total / 60);
   const m = total % 60;
   return h ? `${h}h ${m}m` : `${m}m`;
 }
-function toLocalInput(value) {
+function toDhakaInput(value) {
   const d = value instanceof Date ? value : new Date(value);
-  return `${dateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const parts = dhakaDateTimeParts(d);
+  return `${dateKeyFromParts(parts.year, parts.month, parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
 }
-const fromLocalInput = (v) => new Date(v).toISOString();
+function fromDhakaInput(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return new Date(value).toISOString();
+  const [, year, month, day, hour, minute] = match.map(Number);
+  const target = Date.UTC(year, month - 1, day, hour, minute);
+  let timestamp = target;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const parts = dhakaDateTimeParts(new Date(timestamp));
+    timestamp += target - Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+  }
+  return new Date(timestamp).toISOString();
+}
 const isoDay = (iso) => dateKey(new Date(iso));
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const label = (pairs, value) => (pairs.find((p) => p[0] === value) || [value, value])[1];
@@ -274,7 +307,7 @@ function setThemeMode(mode) {
 }
 
 /* ===== Routing and rendering ===== */
-const PAGE_ORDER = ["dashboard", "schedule", "tasks", "sleep", "finance", "wallets", "transactions", "notes", "goals", "reports", "settings"];
+const PAGE_ORDER = ["dashboard", "schedule", "tasks", "sleep", "finance", "wallets", "transactions", "debts", "fees", "notes", "goals", "reports", "settings"];
 
 function showPage(name, { updateHash = true } = {}) {
   if (!PAGES[name]) name = "dashboard";
@@ -284,7 +317,8 @@ function showPage(name, { updateHash = true } = {}) {
   byId("breadcrumbPage").textContent = PAGES[name].title;
   document.title = `${PAGES[name].title} · LifeKS`;
   renderPage();
-  if (updateHash && location.hash !== "#/" + name) history.replaceState(null, "", "#/" + name);
+  const nextUrl = name === "dashboard" ? location.pathname + location.search : "#/" + name;
+  if (updateHash && (name === "dashboard" ? !!location.hash : location.hash !== nextUrl)) history.replaceState(null, "", nextUrl);
   window.scrollTo(0, 0);
 }
 
@@ -356,7 +390,7 @@ function initEvents() {
 
 /* Greeting helper shared by pages. */
 function greeting(date = new Date()) {
-  const h = date.getHours();
+  const h = dhakaDateTimeParts(date).hour;
   const word = h < 4 ? "Good night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Good night";
   return db.settings.name ? `${word}, ${db.settings.name}` : word;
 }

@@ -3,14 +3,15 @@
 /* ===== Start-up ===== */
 function updateLiveText() {
   $$("[data-elapsed-from]").forEach((el) => { el.textContent = fmtDur(Date.now() - new Date(el.dataset.elapsedFrom)); });
-  byId("headerDate").textContent = new Date().toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  byId("headerDate").textContent = fmtDateShort(todayKey());
 }
 
 let lastMinute = "";
 function tick() {
   updateLiveText();
   const d = new Date();
-  const minute = `${dateKey(d)} ${d.getHours()}:${d.getMinutes()}`;
+  const parts = dhakaDateTimeParts(d);
+  const minute = `${dateKey(d)} ${parts.hour}:${parts.minute}`;
   if (minute !== lastMinute) {
     lastMinute = minute;
     checkReminders();
