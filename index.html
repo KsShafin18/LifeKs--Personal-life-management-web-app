@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#c8223d">
+  <meta name="description" content="LifeKS: Manage Your Time. Track Your Money. Own Your Life.">
+  <title>LifeKS</title>
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* Apply the saved theme before first paint (harmless UI preference only). */
+    try {
+      var t = localStorage.getItem("lifeKS.theme.v1") || "system";
+      var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    } catch (e) {}
+  </script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+  <script src="js/schedule.js" defer></script>
+  <script src="js/tasks.js" defer></script>
+  <script src="js/sleep.js" defer></script>
+  <script src="js/finance.js" defer></script>
+  <script src="js/workspace.js" defer></script>
+  <script src="js/reports.js" defer></script>
+  <script src="js/settings.js" defer></script>
+  <script src="js/script.js" defer></script>
+</head>
+<body>
+  <div id="appView" class="app-view">
+    <aside class="sidebar">
+      <a class="brand sidebar-brand" href="#/dashboard" aria-label="LifeKS dashboard"><img class="brand-logo" src="img/logo.svg" alt=""><span>LifeKS</span><span class="sidebar-version" id="sidebarVersion"></span></a>
+      <div class="sidebar-label">YOUR DAY</div>
+      <nav class="side-nav" aria-label="Main navigation">
+        <button class="nav-item" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+        <button class="nav-item" data-page="schedule"><i data-lucide="calendar-days"></i><span>Schedule</span></button>
+        <button class="nav-item" data-page="tasks"><i data-lucide="list-checks"></i><span>Tasks</span><span class="nav-count" id="tasksCount">0</span></button>
+        <button class="nav-item" data-page="sleep"><i data-lucide="moon-star"></i><span>Sleep</span></button>
+      </nav>
+      <div class="sidebar-label">YOUR MONEY</div>
+      <nav class="side-nav" aria-label="Money navigation">
+        <button class="nav-item" data-page="finance"><i data-lucide="wallet"></i><span>Personal finance</span></button>
+        <button class="nav-item" data-page="wallets"><i data-lucide="wallet-cards"></i><span>Wallets</span></button>
+        <button class="nav-item" data-page="transactions"><i data-lucide="receipt-text"></i><span>Transactions</span></button>
+      </nav>
+      <div class="sidebar-label">YOUR MIND</div>
+      <nav class="side-nav" aria-label="Workspace navigation">
+        <button class="nav-item" data-page="notes"><i data-lucide="notebook-pen"></i><span>Notes &amp; ideas</span><span class="nav-count" id="notesCount">0</span></button>
+        <button class="nav-item" data-page="goals"><i data-lucide="target"></i><span>Goals &amp; habits</span></button>
+        <button class="nav-item" data-page="reports"><i data-lucide="chart-column"></i><span>Reports</span></button>
+      </nav>
+      <div class="sidebar-label">MORE</div>
+      <nav class="side-nav" aria-label="More navigation">
+        <button class="nav-item" data-page="settings"><i data-lucide="settings-2"></i><span>Settings</span></button>
+      </nav>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-header">
+        <div class="mobile-brand brand"><img class="brand-logo" src="img/logo.svg" alt=""><span>LifeKS</span></div>
+        <div class="breadcrumb"><span>LifeKS</span><i data-lucide="chevron-right"></i><strong id="breadcrumbPage">Dashboard</strong></div>
+        <div class="header-right">
+          <span class="header-date" id="headerDate"></span>
+          <button class="icon-button" id="themeToggle" type="button" aria-label="Switch theme"><i data-lucide="moon"></i></button>
+        </div>
+      </header>
+      <main class="page-content" id="pageContent">
+        <section class="app-page is-hidden" id="page-dashboard"></section>
+        <section class="app-page is-hidden" id="page-schedule"></section>
+        <section class="app-page is-hidden" id="page-tasks"></section>
+        <section class="app-page is-hidden" id="page-sleep"></section>
+        <section class="app-page is-hidden" id="page-finance"></section>
+        <section class="app-page is-hidden" id="page-wallets"></section>
+        <section class="app-page is-hidden" id="page-transactions"></section>
+        <section class="app-page is-hidden" id="page-notes"></section>
+        <section class="app-page is-hidden" id="page-goals"></section>
+        <section class="app-page is-hidden" id="page-reports"></section>
+        <section class="app-page is-hidden" id="page-settings"></section>
+        <footer class="app-footer"><span><span id="footerLine">Made for your life, one day at a time</span> <i data-lucide="heart"></i></span><span class="footer-version"><span id="footerVersion">LifeKS ·v0.1.0</span><span class="footer-last-updated" id="footerUpdated">Last Updated 09/11/2026</span></span><a class="developer-credit" href="https://ksportfolio-seven.vercel.app/" target="_blank" rel="noopener noreferrer" aria-label="Open developer portfolio"><img src="https://avatars.githubusercontent.com/u/283763736?v=4" alt="Developer profile picture" loading="lazy" referrerpolicy="no-referrer"><span class="developer-copy"><span class="developer-label">Developer</span><strong class="developer-signature">Ks Shafin</strong></span><i data-lucide="external-link" aria-hidden="true"></i></a></footer>
+      </main>
+      <nav class="mobile-nav" aria-label="Mobile navigation">
+        <button class="mobile-nav-item" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span>Home</span></button>
+        <button class="mobile-nav-item" data-page="schedule"><i data-lucide="calendar-days"></i><span>Schedule</span></button>
+        <button class="mobile-nav-item" data-page="finance"><i data-lucide="wallet"></i><span>Money</span></button>
+        <button class="mobile-nav-item" data-page="sleep"><i data-lucide="moon-star"></i><span>Sleep</span></button>
+        <button class="mobile-nav-item" id="mobileMore" type="button"><i data-lucide="menu"></i><span>More</span></button>
+      </nav>
+    </div>
+  </div>
+
+  <dialog id="formDialog" class="app-dialog" aria-labelledby="formDialogTitle"><form id="formDialogForm" class="dialog-content" novalidate></form></dialog>
+  <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle"><form id="confirmDialogForm" class="dialog-content" method="dialog" novalidate></form></dialog>
+  <dialog id="moreDialog" class="app-dialog" aria-labelledby="moreDialogTitle"><div class="dialog-content">
+    <div class="dialog-header"><h2 id="moreDialogTitle">More</h2><button class="icon-button" type="button" data-close-dialog aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="more-list">
+      <button class="button button-outline" data-page="tasks"><i data-lucide="list-checks"></i> Tasks</button>
+      <button class="button button-outline" data-page="wallets"><i data-lucide="wallet-cards"></i> Wallets</button>
+      <button class="button button-outline" data-page="transactions"><i data-lucide="receipt-text"></i> Transactions</button>
+      <button class="button button-outline" data-page="notes"><i data-lucide="notebook-pen"></i> Notes</button>
+      <button class="button button-outline" data-page="goals"><i data-lucide="target"></i> Goals &amp; habits</button>
+      <button class="button button-outline" data-page="reports"><i data-lucide="chart-column"></i> Reports</button>
+      <button class="button button-outline" data-page="settings"><i data-lucide="settings-2"></i> Settings</button>
+    </div>
+  </div></dialog>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p style="padding:24px;font-family:sans-serif">LifeKS needs JavaScript to run.</p></noscript>
+</body>
+</html>
