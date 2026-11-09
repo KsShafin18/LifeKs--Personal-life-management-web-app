@@ -1,4 +1,4 @@
-# LifeKS
+# LifeKS - \\ Made with Shafin's Thinking, Diagram and Vibe Coding.
 
 **Manage Your Time. Track Your Money. Own Your Life.**
 
