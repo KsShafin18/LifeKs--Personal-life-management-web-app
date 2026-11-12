@@ -162,6 +162,18 @@ svg.lucide, [data-lucide] { width: 18px; height: 18px; flex: 0 0 auto; }
 .progress-track { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
 .progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e04a62, #a31229); transition: width .4s; }
 .progress-label { display: flex; justify-content: space-between; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.challenge-list { display: flex; flex-direction: column; }
+.challenge-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.challenge-list .challenge-item:first-child { border-top: 0; padding-top: 0; }
+.challenge-emoji { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: var(--surface-2); font-size: 23px; flex: 0 0 auto; }
+.challenge-copy { min-width: 0; }
+.challenge-copy > strong { display: block; overflow-wrap: anywhere; }
+.challenge-copy > small { display: block; margin: 3px 0 9px; color: var(--muted); }
+.challenge-ring { width: 52px; height: 52px; display: inline-grid; place-items: center; border-radius: 50%; background: radial-gradient(closest-side, var(--surface) 74%, transparent 75% 100%), conic-gradient(var(--red) var(--challenge-angle), var(--surface-2) 0); font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.challenge-history-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.challenge-history-title > div { min-width: 0; }
+.challenge-history-title h2 { overflow-wrap: anywhere; }
+.challenge-history .card-head { align-items: center; }
 
 /* Forms */
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
@@ -260,5 +272,8 @@ svg.lucide, [data-lucide] { width: 18px; height: 18px; flex: 0 0 auto; }
   .hbar { grid-template-columns: 80px 1fr auto; }
   .date-nav strong { min-width: 110px; }
   .day-cell { min-height: 52px; padding: 4px; }
+  .challenge-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+  .challenge-item .challenge-ring { grid-column: 1; grid-row: 2; }
+  .challenge-item .button { grid-column: 2 / -1; justify-self: start; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

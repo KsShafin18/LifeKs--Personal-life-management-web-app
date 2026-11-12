@@ -1,7 +1,7 @@
 "use strict";
 
 /* ===== Settings, backup and data safety ===== */
-const BACKUP_FORMAT = { app: "LifeKS", schemaVersion: 2 };
+const BACKUP_FORMAT = { app: "LifeKS", schemaVersion: 3 };
 const CATEGORY_KINDS = [["income", "Income sources"], ["expense", "Expense categories"], ["schedule", "Schedule categories"], ["task", "Task categories"]];
 let storageInfo = null;
 
@@ -27,11 +27,11 @@ function downloadFile(filename, text, mime) {
 
 function validateBackup(obj) {
   if (!obj || typeof obj !== "object" || obj.app !== "LifeKS" || !obj.data || typeof obj.data !== "object") return "This file is not a LifeKS backup.";
-  if (![1, 2].includes(obj.schemaVersion)) return "This backup was made by a newer version of LifeKS and can’t be restored here.";
+  if (![1, 2, 3].includes(obj.schemaVersion)) return "This backup was made by a newer version of LifeKS and can’t be restored here.";
   const d = obj.data;
   for (const name of CONFIG.collections) {
     if (!Array.isArray(d[name])) {
-      if (obj.schemaVersion === 1 && ["debts", "educationFees"].includes(name)) { d[name] = []; continue; }
+      if ((obj.schemaVersion === 1 && ["debts", "educationFees"].includes(name)) || (name === "challenges" && obj.schemaVersion < 3)) { d[name] = []; continue; }
       return `The backup is missing “${name}”.`;
     }
     if (!d[name].every((r) => r && typeof r === "object" && typeof r.id === "string")) return `Some ${name} in the backup are damaged.`;
@@ -47,6 +47,10 @@ function validateBackup(obj) {
     validPayments(debt.payments, debt.principal))) return "Some debt records in the backup are damaged.";
   if (!d.educationFees.every((fee) => ["monthly", "semester", "custom"].includes(fee.type) && typeof fee.name === "string" && typeof fee.period === "string" && Number.isSafeInteger(fee.amount) && fee.amount > 0 &&
     validPayments(fee.payments, fee.amount))) return "Some university fee records in the backup are damaged.";
+  if (!d.challenges.every((challenge) => typeof challenge.title === "string" && challenge.title.trim() &&
+    typeof challenge.emoji === "string" && challenge.emoji.trim() && validDateKey(challenge.startDate) &&
+    (challenge.endedAt === null || (typeof challenge.endedAt === "string" && !Number.isNaN(new Date(challenge.endedAt).getTime()) &&
+      isoDay(challenge.endedAt) >= challenge.startDate)))) return "Some 30-day challenges in the backup are damaged.";
   if (!d.sleep.every((s) => !Number.isNaN(new Date(s.start).getTime()))) return "Some sleep sessions in the backup are damaged.";
   if (!d.settings || typeof d.settings !== "object") return "The backup is missing settings.";
   if (!d.categories || !["income", "expense", "schedule", "task"].every((k) => Array.isArray(d.categories[k]) && d.categories[k].every((c) => typeof c === "string"))) return "The backup is missing categories.";
@@ -152,7 +156,7 @@ function addPreviousData() { readBackup("merge"); }
 function clearAllData() {
   askConfirm({
     title: "Clear all LifeKS data?",
-    message: "This permanently deletes every schedule, task, sleep session, wallet, transaction, loan, debt, university fee record, note, goal and habit stored on this device. It can’t be undone. Export a backup first if you might want anything back.",
+    message: "This permanently deletes every schedule, task, sleep session, wallet, transaction, loan, debt, university fee record, note, goal, habit and challenge stored on this device. It can’t be undone. Export a backup first if you might want anything back.",
     typeWord: "DELETE", confirmLabel: "Delete everything",
     onConfirm() {
       Store.dataKeys().forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });

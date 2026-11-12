@@ -34,6 +34,7 @@ PAGES.dashboard = {
     const lastSleep = db.sleep.filter((s) => s.end).sort((a, b) => new Date(b.end) - new Date(a.end))[0];
     const recent = db.transactions.slice().sort(byTimeDesc).slice(0, 5);
     const habitsDone = db.habits.filter((h) => habitDone(h, today)).length;
+    const activeChallenges = db.challenges.filter((challenge) => !challenge.endedAt);
     const link = (page, text) => `<button class="text-button" data-page="${page}">${text} ${icon("arrow-right")}</button>`;
 
     const nowNext = (active.length ? active.map((o) => `<div class="row"><div class="row-main"><strong>${esc(o.entry.title)}</strong><small>${fmtTime(o.entry.start)} – ${fmtTime(o.entry.end)} · ${fmtDur((toMin(o.entry.end) - nowMin()) * 60000)} left</small></div><span class="pill is-red">Happening now</span></div>`).join("") : "") +
@@ -55,6 +56,8 @@ PAGES.dashboard = {
           ${db.habits.length ? `<p style="margin:12px 0 0">Habits: <strong>${habitsDone} of ${db.habits.length}</strong> done today. ${link("goals", "Habits")}</p>` : ""}</div>
         <div class="card"><div class="card-head"><h2>Sleep</h2>${link("sleep", "Sleep")}</div>${sleepBody}</div>
       </div>
+      <div class="card" style="margin-top:16px"><div class="card-head"><h2>Your 30-day challenges</h2>${link("challenges", "View all")}</div>
+        ${activeChallenges.length ? `<div class="stack">${activeChallenges.map(challengeActiveCard).join("")}</div>` : emptyCard("No active challenges yet.", `<button class="button button-primary button-sm" data-action="challenge-add">${icon("plus")} Add a challenge</button>`)}</div>
       <div class="card" style="margin-top:16px"><div class="card-head"><h2><button class="text-button" type="button" data-action="dashboard-history-toggle" aria-expanded="${!!ui.dashboardHistoryOpen}" aria-controls="dashboardHistoryList">Transaction history ${icon(ui.dashboardHistoryOpen ? "chevron-up" : "chevron-down")}</button></h2>${link("transactions", "See all")}</div>
         <div class="list" id="dashboardHistoryList"${ui.dashboardHistoryOpen ? "" : " hidden"}>${ui.dashboardHistoryOpen ? (recent.length ? recent.map(txRow).join("") : emptyCard("Nothing here until you record a transaction.")) : ""}</div></div>`;
   }

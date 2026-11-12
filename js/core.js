@@ -3,7 +3,7 @@
 /* ===== Config (edit here) ===== */
 const CONFIG = {
   app: { name: "LifeKS", version: "v0.1.0", lastUpdated: "09/11/2026", footerLine: "Made for your life, one day at a time" },
-  collections: ["schedules", "tasks", "sleep", "wallets", "transactions", "loans", "debts", "educationFees", "notes", "goals", "habits"],
+  collections: ["schedules", "tasks", "sleep", "wallets", "transactions", "loans", "debts", "educationFees", "notes", "goals", "habits", "challenges"],
   currencies: { BDT: "৳", USD: "$", INR: "₹", EUR: "€" },
   defaultWallets: [
     { name: "Cash", type: "cash" }, { name: "bKash", type: "mobile" },
@@ -276,7 +276,13 @@ function askConfirm(config) {
   form.innerHTML = `<div class="dialog-header"><h2 id="confirmDialogTitle">${esc(config.title)}</h2></div>
     <p style="margin:0 0 14px">${esc(config.message)}</p>
     ${config.typeWord ? `<div class="field"><label for="confirmWord">Type ${esc(config.typeWord)} to confirm</label><input id="confirmWord" autocomplete="off"></div>` : ""}
-    <div class="dialog-actions"><button type="button" class="button button-quiet" data-close-dialog>Cancel</button><button type="submit" class="button ${config.danger === false ? "button-primary" : "button-danger"}" id="confirmYes">${esc(config.confirmLabel || "Confirm")}</button></div>`;
+    <div class="dialog-actions"><button type="button" class="button button-quiet" data-confirm-cancel>${esc(config.cancelLabel || "Cancel")}</button><button type="submit" class="button ${config.danger === false ? "button-primary" : "button-danger"}" id="confirmYes">${esc(config.confirmLabel || "Confirm")}</button></div>`;
+  const cancel = form.querySelector("[data-confirm-cancel]");
+  cancel.addEventListener("click", (event) => {
+    event.stopPropagation();
+    dialog.close();
+    if (config.onCancel) config.onCancel();
+  });
   form.onsubmit = (event) => {
     event.preventDefault();
     if (config.typeWord && byId("confirmWord").value.trim() !== config.typeWord) { byId("confirmWord").focus(); return; }
@@ -307,7 +313,7 @@ function setThemeMode(mode) {
 }
 
 /* ===== Routing and rendering ===== */
-const PAGE_ORDER = ["dashboard", "schedule", "tasks", "sleep", "finance", "wallets", "transactions", "debts", "fees", "notes", "goals", "reports", "settings"];
+const PAGE_ORDER = ["dashboard", "schedule", "tasks", "sleep", "finance", "wallets", "transactions", "debts", "fees", "notes", "goals", "challenges", "reports", "settings"];
 
 function showPage(name, { updateHash = true } = {}) {
   if (!PAGES[name]) name = "dashboard";

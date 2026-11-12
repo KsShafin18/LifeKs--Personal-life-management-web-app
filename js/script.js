@@ -16,7 +16,7 @@ function tick() {
     lastMinute = minute;
     checkReminders();
     const idle = !document.querySelector("dialog[open]") && !(document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
-    if (idle && ["dashboard", "schedule"].includes(appState.page)) renderPage();
+    if (idle && ["dashboard", "schedule", "challenges"].includes(appState.page)) renderPage();
   }
 }
 

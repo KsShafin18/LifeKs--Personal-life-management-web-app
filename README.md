@@ -27,6 +27,7 @@ Lucide icons and the DM Sans, Manrope and Dancing Script fonts load from CDNs. T
 | University fees | Set your university name and track monthly, semester and custom fees with payment history separately from wallet transactions |
 | Notes | Pin, tags, search, created and updated times |
 | Goals and habits | Daily habits with streaks and history, weekly and monthly goals |
+| 30-day challenges | Run multiple challenges at once, track start dates and progress on the dashboard, and keep ended challenges in your history |
 | Reports | Income vs expense, category spending, balance history, sleep and productivity, with date ranges |
 | Settings | Theme, name, currency symbol, categories, download/transfer backup, add previous data, restore, clear data |
 
@@ -69,6 +70,7 @@ The brief planned Supabase, sign-in and Row Level Security. This version has **n
 - `js/storage.js` safe LocalStorage layer
 - `js/core.js` config, data loading, `commit()`, helpers, dialogs, routing
 - `js/dashboard.js`, `schedule.js`, `tasks.js`, `sleep.js`, `finance.js`, `workspace.js`, `reports.js`, `settings.js` one file per area
+- `js/challenges.js` 30-day challenge tracking and history
 - `js/script.js` start-up
 - `docs/` original project brief and diagrams
 
